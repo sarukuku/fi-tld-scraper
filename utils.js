@@ -7,7 +7,7 @@ let fetchedCount = 0
 
 exports.addToEndOfFile = async (filePath, value) => {
   return new Promise(resolve => {
-    fs.appendFile(filePath, value, () => {
+    fs.appendFile(filePath, value, 'utf8', () => {
       resolve()
     })
   })
@@ -31,12 +31,44 @@ const getPage = async link => {
   })
 }
 
-const getStringifiedResults = resultsArr => {
+const writeDomainsToJsonFile = async results => {
+  // Stringify the json objects.
   let jsonString = ''
-  resultsArr.forEach((domain, index, array) => {
+  results.value.forEach(domain => {
     jsonString += `${JSON.stringify(domain)},`
   })
-  return jsonString
+
+  /**
+   * Remove the trailing last comma from the last
+   * domain object string if this is the last page
+   */
+  if (!results['@odata.nextLink'] || fetchedCount >= settings.fetchTarget) {
+    jsonString = jsonString.substring(0, jsonString.length - 1)
+  }
+
+  // Write the string to file.
+  await exports.addToEndOfFile(settings.domainsJsonFilePath, jsonString)
+}
+
+const writeDomainsToCsvFile = async results => {
+  // Stringify the json objects.
+  let csvRowSet = ''
+  results.value.forEach(domain => {
+    let csvRow = ''
+    const keys = Object.keys(domain)
+    keys.forEach(key => {
+      csvRow += (domain[key]) ? `"${domain[key]}";` : ';'
+    })
+
+    // Trim last ; away
+    csvRow = csvRow.substring(0, csvRow.length - 1)
+
+    // Append the row
+    csvRowSet += `${csvRow}\n`
+  })
+
+  // Write the string to file.
+  await exports.addToEndOfFile(settings.domainsCsvFilePath, csvRowSet)
 }
 
 // Recursive data fetcher function.
@@ -52,19 +84,13 @@ exports.fetchAndWriteDomainsToFile = async link => {
   // Increase the fetched counter.
   fetchedCount += results.value.length
 
-  // Stringify the json objects.
-  let jsonString = getStringifiedResults(results.value)
-
-  /**
-   * Remove the trailing last comma from the last
-   * domain object string if this is the last page
-   */
-  if (!results['@odata.nextLink'] || fetchedCount >= settings.fetchTarget) {
-    jsonString = jsonString.substring(0, jsonString.length - 1)
+  if (settings.json) {
+    await writeDomainsToJsonFile(results)
   }
 
-  // Write the string to file.
-  await exports.addToEndOfFile(settings.domainsJsonFilePath, jsonString)
+  if (settings.csv) {
+    await writeDomainsToCsvFile(results)
+  }
 
   // Fetch next page if link available.
   if (results['@odata.nextLink'] && fetchedCount < settings.fetchTarget) {

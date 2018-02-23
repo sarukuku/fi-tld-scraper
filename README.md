@@ -1,5 +1,5 @@
 # .fi TLD scraper
-A command line tool that scrapes data of .fi domains from an open api provided by the The Finnish Communications Regulatory Authority and saves the results to a JSON file.
+A command line tool that scrapes data of .fi domains from an open api provided by the The Finnish Communications Regulatory Authority and saves the results to a JSON file and to a CSV file.
 
 ## How to install
 Clone or download the repository and run `yarn` in it.
@@ -12,7 +12,7 @@ The app has been tested only on a macOS High Sierra and has the followind depend
 - a good network connection
 
 ## How to use
-Run a full scrape. This means that the scraper will fech all data on all .fi domains owned by organizations and unions. At the time of writing this the amout is close to 370 000 unique domains. As a result you'll get single JSON file that weighs around 250 Mb.
+Run a full scrape. This means that the scraper will fech all data on all .fi domains owned by organizations and unions. At the time of writing this the amout is close to 370 000 unique domains. As a result you'll get single JSON file and a single CSV file that both weigh around 250 Mb. Running the full scrape takes about ~20 minutes.
 ```bash
 npm run start
 ```
@@ -21,6 +21,18 @@ Run a limited scrape. The `--soft-limit` handle allows you to set a soft limit f
 ```bash
 npm run start -- --soft-limit=500
 ```
+
+Disable JSON output.
+```bash
+npm run start -- --no-json
+```
+
+Disable CSV output.
+```bash
+npm run start -- --no-csv
+```
+
+All of the flags above can be combined freely.
 
 ## Example output of a limited test
 ```bash
@@ -71,4 +83,11 @@ The resulting JSON file with one domain would look like this (actual data reduct
     }
   ]
 }
+```
+
+## Form of the resulting CSV file
+The resulting CSV file with one domain would look like this (actual data reducted).
+```csv
+Name;State;GrantDate;LastValidityDate;IsDNSSecInUse;Holder;Registrar;OrganizationId;Address;PostalCode;PostalArea;AssociationType;PhoneNumber;DepartmentOrContactPerson;Country;NameServer1;NameServer2;NameServer3;NameServer4;NameServer5;NameServer6;NameServer7;NameServer8;NameServer9;NameServer10
+"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";"";""
 ```
